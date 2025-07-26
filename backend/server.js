@@ -46,6 +46,22 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Home route to show the backend is working
+app.get('/', (req, res) => {
+  res.json({
+    message: 'SimpleDesk Backend API is running!',
+    status: 'success',
+    endpoints: [
+      'GET /api/health - Health check',
+      'POST /api/auth/register - Register user',
+      'POST /api/auth/login - Login user',
+      'GET /api/tickets - Get tickets',
+      'POST /api/tickets - Create ticket'
+    ],
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Socket.io for real-time features
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
