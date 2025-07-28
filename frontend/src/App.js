@@ -7,7 +7,10 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import TicketList from './pages/TicketList';
 import TicketDetail from './pages/TicketDetail';
+import NewTicket from './pages/NewTicket';
 import UserManagement from './pages/UserManagement';
+import KnowledgeBase from './pages/KnowledgeBase';
+import Chat from './pages/Chat';
 import Settings from './pages/Settings';
 import Layout from './components/Layout';
 import './index.css';
@@ -92,6 +95,16 @@ function AppRoutes() {
         } 
       />
       <Route 
+        path="/tickets/new" 
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <NewTicket />
+            </Layout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
         path="/tickets/:ticketId" 
         element={
           <ProtectedRoute>
@@ -107,6 +120,26 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <UserManagement />
+            </Layout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/knowledge-base" 
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <KnowledgeBase />
+            </Layout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/chat" 
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Chat />
             </Layout>
           </ProtectedRoute>
         } 

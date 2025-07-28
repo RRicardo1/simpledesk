@@ -78,9 +78,9 @@ const TicketList = () => {
             Manage and track all customer support requests
           </p>
         </div>
-        <button className="btn-primary">
+        <Link to="/tickets/new" className="btn-primary">
           New Ticket
-        </button>
+        </Link>
       </div>
 
       {/* Filters */}

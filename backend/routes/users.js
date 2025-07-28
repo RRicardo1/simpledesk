@@ -113,6 +113,67 @@ router.post('/', authenticateToken, requireRole(['admin']), async (req, res) => 
   }
 });
 
+// Invite user (admin only) - alias for create user
+router.post('/invite', authenticateToken, requireRole(['admin']), async (req, res) => {
+  const { email, firstName, lastName, role, phone } = req.body;
+
+  try {
+    // Validation
+    if (!email || !firstName || !lastName || !role) {
+      return res.status(400).json({ error: 'Email, first name, last name, and role are required' });
+    }
+
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    if (!['admin', 'agent'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role. Must be admin or agent' });
+    }
+
+    // Check if email already exists
+    const existingUser = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
+
+    // Create user with invited status (they'll set password on first login)
+    const userId = uuidv4();
+    await db.query(
+      `INSERT INTO users (id, organization_id, email, first_name, last_name, role, phone, status) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [userId, req.user.organization_id, email, firstName, lastName, role, phone, 'invited']
+    );
+
+    // Log activity
+    await db.query(
+      `INSERT INTO activity_logs (organization_id, user_id, action, details)
+       VALUES ($1, $2, $3, $4)`,
+      [req.user.organization_id, req.user.id, 'user_invited', 
+       JSON.stringify({ invitedUserId: userId, email, role })]
+    );
+
+    // TODO: Send invitation email
+
+    res.status(201).json({
+      message: 'User invited successfully',
+      user: {
+        id: userId,
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        role,
+        phone,
+        status: 'invited'
+      }
+    });
+
+  } catch (error) {
+    console.error('Invite user error:', error);
+    res.status(500).json({ error: 'Failed to invite user' });
+  }
+});
+
 // Update user (admin only)
 router.put('/:userId', authenticateToken, requireRole(['admin']), async (req, res) => {
   const { userId } = req.params;

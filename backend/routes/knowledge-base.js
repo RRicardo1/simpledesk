@@ -47,14 +47,40 @@ router.get('/public/:organizationId', async (req, res) => {
 
 // Get knowledge base articles for organization
 router.get('/', authenticateToken, async (req, res) => {
+  const { search, status, category } = req.query;
+
   try {
+    let whereConditions = ['kb.organization_id = $1'];
+    let queryParams = [req.user.organization_id];
+    let paramCount = 1;
+
+    if (status) {
+      paramCount++;
+      whereConditions.push(`kb.status = $${paramCount}`);
+      queryParams.push(status);
+    }
+
+    if (category) {
+      paramCount++;
+      whereConditions.push(`kb.category = $${paramCount}`);
+      queryParams.push(category);
+    }
+
+    if (search) {
+      paramCount++;
+      whereConditions.push(`(kb.title ILIKE $${paramCount} OR kb.body ILIKE $${paramCount})`);
+      queryParams.push(`%${search}%`);
+    }
+
+    const whereClause = whereConditions.join(' AND ');
+
     const result = await db.query(
       `SELECT kb.*, u.first_name as author_first_name, u.last_name as author_last_name
        FROM kb_articles kb
        LEFT JOIN users u ON kb.author_id = u.id
-       WHERE kb.organization_id = $1
+       WHERE ${whereClause}
        ORDER BY kb.updated_at DESC`,
-      [req.user.organization_id]
+      queryParams
     );
 
     res.json({ articles: result.rows });
