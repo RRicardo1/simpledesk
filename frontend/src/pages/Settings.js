@@ -15,18 +15,18 @@ const Settings = () => {
         <div className="lg:col-span-1">
           <div className="card">
             <nav className="space-y-1">
-              <a href="#" className="bg-primary-50 text-primary-700 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+              <button type="button" className="bg-primary-50 text-primary-700 group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full text-left">
                 General
-              </a>
-              <a href="#" className="text-gray-900 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+              </button>
+              <button type="button" className="text-gray-900 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full text-left">
                 Email Settings
-              </a>
-              <a href="#" className="text-gray-900 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+              </button>
+              <button type="button" className="text-gray-900 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full text-left">
                 Billing
-              </a>
-              <a href="#" className="text-gray-900 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+              </button>
+              <button type="button" className="text-gray-900 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full text-left">
                 Integrations
-              </a>
+              </button>
             </nav>
           </div>
         </div>

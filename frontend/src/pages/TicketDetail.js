@@ -69,25 +69,6 @@ const TicketDetail = () => {
     updateTicketMutation.mutate({ priority: newPriority });
   };
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      open: 'bg-green-100 text-green-800',
-      pending: 'bg-yellow-100 text-yellow-800',
-      solved: 'bg-blue-100 text-blue-800',
-      closed: 'bg-gray-100 text-gray-800'
-    };
-    return badges[status] || badges.open;
-  };
-
-  const getPriorityBadge = (priority) => {
-    const badges = {
-      low: 'bg-gray-100 text-gray-800',
-      normal: 'bg-blue-100 text-blue-800',
-      high: 'bg-orange-100 text-orange-800',
-      urgent: 'bg-red-100 text-red-800'
-    };
-    return badges[priority] || badges.normal;
-  };
 
   if (isLoading) {
     return (

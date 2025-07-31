@@ -88,14 +88,6 @@ const UserManagement = () => {
     }
   };
 
-  const getRoleBadge = (role) => {
-    const badges = {
-      admin: 'bg-purple-100 text-purple-800',
-      agent: 'bg-blue-100 text-blue-800',
-      customer: 'bg-gray-100 text-gray-800'
-    };
-    return badges[role] || badges.agent;
-  };
 
   const getStatusBadge = (status) => {
     const badges = {

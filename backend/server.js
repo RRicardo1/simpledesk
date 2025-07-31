@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const dotenv = require('dotenv');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const { initializeDatabase } = require('./config/init-db');
 
 dotenv.config();
 
@@ -104,7 +105,10 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`SimpleDesk server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
+  
+  // Initialize database tables
+  await initializeDatabase();
 });
