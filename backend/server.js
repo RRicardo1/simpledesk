@@ -13,6 +13,8 @@ const corsOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
   : ["http://localhost:3000"];
 
+console.log('🔧 CORS Origins configured:', corsOrigins);
+
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
@@ -27,7 +29,19 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: corsOrigins,
+  origin: function (origin, callback) {
+    console.log('🌐 CORS Origin request:', origin);
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (corsOrigins.indexOf(origin) !== -1) {
+      console.log('✅ CORS Origin allowed:', origin);
+      callback(null, true);
+    } else {
+      console.log('❌ CORS Origin blocked:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
