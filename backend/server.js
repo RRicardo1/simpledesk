@@ -13,13 +13,23 @@ const corsOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
   : ["http://localhost:3000"];
 
-console.log('🔧 CORS Origins configured:', corsOrigins);
+// Fallback: Add required domains if not present
+const requiredOrigins = [
+  "https://simpledesk-ib3s.vercel.app",
+  "https://mysimpledesk.com", 
+  "https://www.mysimpledesk.com"
+];
+
+const allOrigins = [...new Set([...corsOrigins, ...requiredOrigins])];
+
+console.log('🔧 CORS Origins from env:', corsOrigins);
+console.log('🔧 All CORS Origins configured:', allOrigins);
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: corsOrigins,
+    origin: allOrigins,
     methods: ["GET", "POST"]
   }
 });
@@ -34,7 +44,7 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (corsOrigins.indexOf(origin) !== -1) {
+    if (allOrigins.indexOf(origin) !== -1) {
       console.log('✅ CORS Origin allowed:', origin);
       callback(null, true);
     } else {
