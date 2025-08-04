@@ -11,7 +11,8 @@ const BillingPage = () => {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState('starter');
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   const plans = {
     starter: {
@@ -72,6 +73,8 @@ const BillingPage = () => {
               plans={plans}
               selectedPlan={selectedPlan}
               setSelectedPlan={setSelectedPlan}
+              showPaymentForm={showPaymentForm}
+              setShowPaymentForm={setShowPaymentForm}
               onSuccess={fetchSubscription}
             />
           </Elements>
@@ -147,17 +150,23 @@ const CurrentSubscription = ({ subscription, onCancel }) => {
   );
 };
 
-const SubscriptionPlans = ({ plans, selectedPlan, setSelectedPlan, onSuccess }) => {
+const SubscriptionPlans = ({ plans, selectedPlan, setSelectedPlan, showPaymentForm, setShowPaymentForm, onSuccess }) => {
+  
+  const handlePlanSelect = (planKey) => {
+    setSelectedPlan(planKey);
+    setShowPaymentForm(true);
+  };
+
   return (
     <div className="mt-12">
       <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
         {Object.entries(plans).map(([planKey, plan]) => (
           <div
             key={planKey}
-            className={`bg-white rounded-lg shadow-lg p-6 cursor-pointer border-2 ${
-              selectedPlan === planKey ? 'border-primary-600' : 'border-transparent'
+            className={`bg-white rounded-lg shadow-lg p-6 cursor-pointer border-2 transition-all ${
+              selectedPlan === planKey ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
             }`}
-            onClick={() => setSelectedPlan(planKey)}
+            onClick={() => handlePlanSelect(planKey)}
           >
             <h3 className="text-xl font-semibold text-gray-900">{plan.name}</h3>
             <div className="mt-4">
@@ -175,22 +184,48 @@ const SubscriptionPlans = ({ plans, selectedPlan, setSelectedPlan, onSuccess }) 
                 </li>
               ))}
             </ul>
+            
+            {selectedPlan === planKey && (
+              <div className="mt-4 text-center">
+                <span className="inline-block bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium">
+                  Selected Plan
+                </span>
+              </div>
+            )}
           </div>
         ))}
       </div>
 
-      <div className="mt-8 max-w-md mx-auto">
-        <PaymentForm selectedPlan={selectedPlan} planName={plans[selectedPlan].name} onSuccess={onSuccess} />
-      </div>
+      {showPaymentForm && selectedPlan && (
+        <div className="mt-8 max-w-md mx-auto">
+          <PaymentForm 
+            selectedPlan={selectedPlan} 
+            planName={plans[selectedPlan].name} 
+            onSuccess={onSuccess}
+            onCancel={() => {
+              setShowPaymentForm(false);
+              setSelectedPlan(null);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };
 
-const PaymentForm = ({ selectedPlan, planName, onSuccess }) => {
+const PaymentForm = ({ selectedPlan, planName, onSuccess, onCancel }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
+
+  // Debug Stripe loading
+  React.useEffect(() => {
+    console.log('Stripe Promise:', stripePromise);
+    console.log('Stripe Instance:', stripe);
+    console.log('Elements Instance:', elements);
+    console.log('Stripe Publishable Key:', process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+  }, [stripe, elements]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -243,9 +278,32 @@ const PaymentForm = ({ selectedPlan, planName, onSuccess }) => {
     }
   };
 
+  if (!stripe || !elements) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading payment form...</p>
+          {!process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY && (
+            <p className="mt-2 text-red-600 text-sm">⚠️ Stripe publishable key not configured</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-semibold mb-4">Subscribe to {planName}</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Subscribe to {planName}</h3>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          ✕
+        </button>
+      </div>
       
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -274,13 +332,22 @@ const PaymentForm = ({ selectedPlan, planName, onSuccess }) => {
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={!stripe || processing}
-        className="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 disabled:opacity-50"
-      >
-        {processing ? 'Processing...' : `Subscribe to ${planName}`}
-      </button>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={!stripe || processing}
+          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
+        >
+          {processing ? 'Processing...' : `Subscribe to ${planName}`}
+        </button>
+      </div>
     </form>
   );
 };
