@@ -56,9 +56,9 @@ router.post('/subscribe', authenticateToken, requireRole(['admin']), async (req,
 
     // Validate plan
     const planPrices = {
-      starter: 'price_starter_id', // Replace with actual Stripe price IDs
-      growth: 'price_growth_id',
-      business: 'price_business_id'
+      starter: process.env.STRIPE_STARTER_PRICE,
+      growth: process.env.STRIPE_GROWTH_PRICE,
+      business: process.env.STRIPE_BUSINESS_PRICE
     };
 
     if (!planPrices[plan]) {
@@ -208,9 +208,9 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 async function handleSubscriptionUpdate(subscription) {
   try {
     const planMapping = {
-      'price_starter_id': 'starter',
-      'price_growth_id': 'growth', 
-      'price_business_id': 'business'
+      [process.env.STRIPE_STARTER_PRICE]: 'starter',
+      [process.env.STRIPE_GROWTH_PRICE]: 'growth', 
+      [process.env.STRIPE_BUSINESS_PRICE]: 'business'
     };
 
     const priceId = subscription.items.data[0].price.id;
