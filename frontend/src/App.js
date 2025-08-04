@@ -12,6 +12,7 @@ import UserManagement from './pages/UserManagement';
 import KnowledgeBase from './pages/KnowledgeBase';
 import Chat from './pages/Chat';
 import Settings from './pages/Settings';
+import Billing from './pages/Billing';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -150,6 +151,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <Settings />
+            </Layout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/billing" 
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Billing />
             </Layout>
           </ProtectedRoute>
         } 
