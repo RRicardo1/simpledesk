@@ -138,7 +138,14 @@ router.post('/subscribe', authenticateToken, requireRole(['admin']), async (req,
 
   } catch (error) {
     console.error('Create subscription error:', error);
-    res.status(500).json({ error: 'Failed to create subscription' });
+    console.error('Error details:', error.message);
+    console.error('Error type:', error.type);
+    console.error('Error code:', error.code);
+    res.status(500).json({ 
+      error: 'Failed to create subscription',
+      details: error.message,
+      type: error.type || 'unknown'
+    });
   }
 });
 
