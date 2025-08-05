@@ -5,6 +5,29 @@ const { authenticateToken, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Test endpoint to verify Stripe configuration
+router.get('/test-stripe', async (req, res) => {
+  try {
+    console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
+    console.log('STRIPE_SECRET_KEY first 10 chars:', process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.substring(0, 10) : 'undefined');
+    
+    // Test Stripe connection
+    const balance = await stripe.balance.retrieve();
+    res.json({ 
+      success: true, 
+      stripeConnected: true,
+      balance: balance.available[0]?.amount || 0
+    });
+  } catch (error) {
+    console.error('Stripe test error:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      stripeKeyConfigured: !!process.env.STRIPE_SECRET_KEY
+    });
+  }
+});
+
 // Get current subscription
 router.get('/subscription', authenticateToken, async (req, res) => {
   try {
