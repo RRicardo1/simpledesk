@@ -4,7 +4,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import axios from 'axios';
 
-// Initialize Stripe
+// Initialize Stripe - Add debug logging
+console.log('Stripe Key:', process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 const BillingPage = () => {
@@ -153,8 +154,10 @@ const CurrentSubscription = ({ subscription, onCancel }) => {
 const SubscriptionPlans = ({ plans, selectedPlan, setSelectedPlan, showPaymentForm, setShowPaymentForm, onSuccess }) => {
   
   const handlePlanSelect = (planKey) => {
+    console.log('Plan selected:', planKey);
     setSelectedPlan(planKey);
     setShowPaymentForm(true);
+    console.log('Payment form should show:', true);
   };
 
   return (
