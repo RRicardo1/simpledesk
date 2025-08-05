@@ -61,7 +61,7 @@ const BillingPage = () => {
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">Billing & Subscription</h1>
           <p className="mt-4 text-lg text-gray-600">
-            Manage your SimpleDesk subscription and billing
+            Choose your plan and start accepting customer tickets today
           </p>
         </div>
 
