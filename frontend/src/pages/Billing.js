@@ -4,9 +4,10 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import axios from 'axios';
 
-// Initialize Stripe - Add debug logging
-console.log('Stripe Key:', process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+// Initialize Stripe with fallback
+const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_51Rote9QKQnR8VR9RyKR30jpkeGwejAbZyoWi6vZ5P1VVhfxggFLAnc4GXPA3prBAfylMZxGMaCZUhaWOEA5zzjHc00UbupmGtJ';
+console.log('Stripe Key:', STRIPE_KEY);
+const stripePromise = loadStripe(STRIPE_KEY);
 
 const BillingPage = () => {
   const { user } = useAuth();
