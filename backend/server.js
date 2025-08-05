@@ -137,6 +137,7 @@ app.use('*', (req, res) => {
 server.listen(PORT, async () => {
   console.log(`SimpleDesk server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
+  console.log(`Stripe Secret Key loaded: ${!!process.env.STRIPE_SECRET_KEY}`);
   
   // Initialize database tables
   await initializeDatabase();
