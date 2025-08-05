@@ -1,10 +1,20 @@
 const express = require('express');
 
-// Parse Stripe config from JSON environment variable
+// Parse Stripe config from JSON environment variable or use raw value
 let stripeSecretKey;
 try {
-  const stripeConfig = JSON.parse(process.env.STRIPE_CONFIG || '{}');
-  stripeSecretKey = stripeConfig.secret_key || process.env.STRIPE_SECRET_KEY;
+  if (process.env.STRIPE_CONFIG) {
+    // Try parsing as JSON first
+    try {
+      const stripeConfig = JSON.parse(process.env.STRIPE_CONFIG);
+      stripeSecretKey = stripeConfig.secret_key;
+    } catch (jsonError) {
+      // If JSON parsing fails, use the raw value (assuming it's the key itself)
+      stripeSecretKey = process.env.STRIPE_CONFIG;
+    }
+  } else {
+    stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  }
 } catch (error) {
   console.log('Using fallback STRIPE_SECRET_KEY');
   stripeSecretKey = process.env.STRIPE_SECRET_KEY;
