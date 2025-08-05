@@ -121,6 +121,15 @@ async function initializeDatabase() {
       console.log('⚠️ Column addition skipped (likely already exist):', error.message);
     }
 
+    // Add missing Stripe columns to organizations table (if they don't exist)
+    try {
+      await db.query('ALTER TABLE organizations ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255)');
+      await db.query('ALTER TABLE organizations ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(255)');
+      console.log('✅ Missing Stripe columns added to organizations');
+    } catch (error) {
+      console.log('⚠️ Stripe column addition skipped (likely already exist):', error.message);
+    }
+
     console.log('🎉 Database initialization completed successfully!');
     return true;
   } catch (error) {
