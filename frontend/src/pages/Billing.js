@@ -15,6 +15,8 @@ const BillingPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  
+  console.log('BillingPage state:', { selectedPlan, showPaymentForm });
 
   const plans = {
     starter: {
@@ -202,6 +204,11 @@ const SubscriptionPlans = ({ plans, selectedPlan, setSelectedPlan, showPaymentFo
 
       {showPaymentForm && selectedPlan && (
         <div className="mt-8 max-w-md mx-auto">
+          <div className="bg-yellow-100 p-4 rounded mb-4">
+            <p>Debug: Payment form should appear here</p>
+            <p>Selected Plan: {selectedPlan}</p>
+            <p>Show Form: {showPaymentForm.toString()}</p>
+          </div>
           <PaymentForm 
             selectedPlan={selectedPlan} 
             planName={plans[selectedPlan].name} 
@@ -211,6 +218,14 @@ const SubscriptionPlans = ({ plans, selectedPlan, setSelectedPlan, showPaymentFo
               setSelectedPlan(null);
             }}
           />
+        </div>
+      )}
+      
+      {!showPaymentForm && (
+        <div className="mt-8 max-w-md mx-auto bg-blue-100 p-4 rounded">
+          <p>Debug: No payment form shown</p>
+          <p>Selected Plan: {selectedPlan || 'none'}</p>
+          <p>Show Form: {showPaymentForm.toString()}</p>
         </div>
       )}
     </div>
