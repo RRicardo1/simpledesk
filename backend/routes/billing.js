@@ -50,6 +50,13 @@ router.post('/subscribe', authenticateToken, requireRole(['admin']), async (req,
   const { plan, paymentMethodId } = req.body;
 
   try {
+    console.log('=== SUBSCRIPTION CREATION START ===');
+    console.log('Plan:', plan);
+    console.log('Payment Method ID:', paymentMethodId);
+    console.log('User ID:', req.user.userId);
+    console.log('Organization ID:', req.user.organization_id);
+    console.log('Stripe Secret Key configured:', !!process.env.STRIPE_SECRET_KEY);
+
     if (!plan || !paymentMethodId) {
       return res.status(400).json({ error: 'Plan and payment method are required' });
     }
