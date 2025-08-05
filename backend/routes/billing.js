@@ -1,5 +1,16 @@
 const express = require('express');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+// Parse Stripe config from JSON environment variable
+let stripeSecretKey;
+try {
+  const stripeConfig = JSON.parse(process.env.STRIPE_CONFIG || '{}');
+  stripeSecretKey = stripeConfig.secret_key || process.env.STRIPE_SECRET_KEY;
+} catch (error) {
+  console.log('Using fallback STRIPE_SECRET_KEY');
+  stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+}
+
+const stripe = require('stripe')(stripeSecretKey);
 const db = require('../config/database');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 
@@ -8,8 +19,10 @@ const router = express.Router();
 // Test endpoint to verify Stripe configuration
 router.get('/test-stripe', async (req, res) => {
   try {
+    console.log('STRIPE_CONFIG exists:', !!process.env.STRIPE_CONFIG);
     console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
-    console.log('STRIPE_SECRET_KEY first 10 chars:', process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.substring(0, 10) : 'undefined');
+    console.log('Final Stripe key configured:', !!stripeSecretKey);
+    console.log('Stripe key first 10 chars:', stripeSecretKey ? stripeSecretKey.substring(0, 10) : 'undefined');
     
     // Test Stripe connection
     const balance = await stripe.balance.retrieve();
@@ -23,7 +36,8 @@ router.get('/test-stripe', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: error.message,
-      stripeKeyConfigured: !!process.env.STRIPE_SECRET_KEY
+      stripeKeyConfigured: !!stripeSecretKey,
+      stripeConfigExists: !!process.env.STRIPE_CONFIG
     });
   }
 });
@@ -78,7 +92,7 @@ router.post('/subscribe', authenticateToken, requireRole(['admin']), async (req,
     console.log('Payment Method ID:', paymentMethodId);
     console.log('User ID:', req.user.userId);
     console.log('Organization ID:', req.user.organization_id);
-    console.log('Stripe Secret Key configured:', !!process.env.STRIPE_SECRET_KEY);
+    console.log('Stripe Secret Key configured:', !!stripeSecretKey);
 
     if (!plan || !paymentMethodId) {
       return res.status(400).json({ error: 'Plan and payment method are required' });
