@@ -62,6 +62,10 @@ router.post('/subscribe', authenticateToken, requireRole(['admin']), async (req,
     };
 
     console.log('Plan:', plan);
+    console.log('Environment variables:');
+    console.log('STRIPE_STARTER_PRICE:', process.env.STRIPE_STARTER_PRICE);
+    console.log('STRIPE_GROWTH_PRICE:', process.env.STRIPE_GROWTH_PRICE);
+    console.log('STRIPE_BUSINESS_PRICE:', process.env.STRIPE_BUSINESS_PRICE);
     console.log('Plan Prices:', planPrices);
     console.log('Selected Price:', planPrices[plan]);
 
