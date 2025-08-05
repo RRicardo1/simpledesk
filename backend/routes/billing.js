@@ -61,8 +61,16 @@ router.post('/subscribe', authenticateToken, requireRole(['admin']), async (req,
       business: process.env.STRIPE_BUSINESS_PRICE
     };
 
+    console.log('Plan:', plan);
+    console.log('Plan Prices:', planPrices);
+    console.log('Selected Price:', planPrices[plan]);
+
     if (!planPrices[plan]) {
-      return res.status(400).json({ error: 'Invalid plan' });
+      return res.status(400).json({ 
+        error: 'Invalid plan',
+        details: `Plan '${plan}' not found. Available plans: ${Object.keys(planPrices).join(', ')}`,
+        planPrices: planPrices
+      });
     }
 
     // Get organization
