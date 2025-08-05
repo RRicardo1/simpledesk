@@ -54,11 +54,11 @@ router.post('/subscribe', authenticateToken, requireRole(['admin']), async (req,
       return res.status(400).json({ error: 'Plan and payment method are required' });
     }
 
-    // Validate plan - with fallback for testing
+    // Validate plan - temporarily hardcode for testing
     const planPrices = {
-      starter: process.env.STRIPE_STARTER_PRICE || 'price_temp_starter',
-      growth: process.env.STRIPE_GROWTH_PRICE || 'price_temp_growth', 
-      business: process.env.STRIPE_BUSINESS_PRICE || 'price_temp_business'
+      starter: process.env.STRIPE_STARTER_PRICE || 'price_1PbOvmRote9QKQnR8BUQQBu8',
+      growth: process.env.STRIPE_GROWTH_PRICE || 'price_1PbOwORote9QKQnR8tN72gBL', 
+      business: process.env.STRIPE_BUSINESS_PRICE || 'price_1PbOwkRote9QKQnR8kPxCM3n'
     };
 
     console.log('Plan:', plan);
