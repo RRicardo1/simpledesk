@@ -4,9 +4,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import axios from 'axios';
 
-// Initialize Stripe with fallback
+// Initialize Stripe
 const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_51Rote9QKQnR8VR9RyKR30jpkeGwejAbZyoWi6vZ5P1VVhfxggFLAnc4GXPA3prBAfylMZxGMaCZUhaWOEA5zzjHc00UbupmGtJ';
-console.log('Stripe Key:', STRIPE_KEY);
 const stripePromise = loadStripe(STRIPE_KEY);
 
 const BillingPage = () => {
@@ -15,8 +14,6 @@ const BillingPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
-  
-  console.log('BillingPage state:', { selectedPlan, showPaymentForm });
 
   const plans = {
     starter: {
@@ -157,10 +154,8 @@ const CurrentSubscription = ({ subscription, onCancel }) => {
 const SubscriptionPlans = ({ plans, selectedPlan, setSelectedPlan, showPaymentForm, setShowPaymentForm, onSuccess }) => {
   
   const handlePlanSelect = (planKey) => {
-    console.log('Plan selected:', planKey);
     setSelectedPlan(planKey);
     setShowPaymentForm(true);
-    console.log('Payment form should show:', true);
   };
 
   return (
@@ -204,11 +199,6 @@ const SubscriptionPlans = ({ plans, selectedPlan, setSelectedPlan, showPaymentFo
 
       {showPaymentForm && selectedPlan && (
         <div className="mt-8 max-w-md mx-auto">
-          <div className="bg-yellow-100 p-4 rounded mb-4">
-            <p>Debug: Payment form should appear here</p>
-            <p>Selected Plan: {selectedPlan}</p>
-            <p>Show Form: {showPaymentForm.toString()}</p>
-          </div>
           <PaymentForm 
             selectedPlan={selectedPlan} 
             planName={plans[selectedPlan].name} 
@@ -218,14 +208,6 @@ const SubscriptionPlans = ({ plans, selectedPlan, setSelectedPlan, showPaymentFo
               setSelectedPlan(null);
             }}
           />
-        </div>
-      )}
-      
-      {!showPaymentForm && (
-        <div className="mt-8 max-w-md mx-auto bg-blue-100 p-4 rounded">
-          <p>Debug: No payment form shown</p>
-          <p>Selected Plan: {selectedPlan || 'none'}</p>
-          <p>Show Form: {showPaymentForm.toString()}</p>
         </div>
       )}
     </div>
@@ -238,13 +220,6 @@ const PaymentForm = ({ selectedPlan, planName, onSuccess, onCancel }) => {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
 
-  // Debug Stripe loading
-  React.useEffect(() => {
-    console.log('Stripe Promise:', stripePromise);
-    console.log('Stripe Instance:', stripe);
-    console.log('Elements Instance:', elements);
-    console.log('Stripe Publishable Key:', process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
-  }, [stripe, elements]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
