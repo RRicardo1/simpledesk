@@ -138,6 +138,13 @@ server.listen(PORT, async () => {
   console.log(`SimpleDesk server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
   console.log(`Stripe Secret Key loaded: ${!!process.env.STRIPE_SECRET_KEY}`);
+console.log('🚀 ALL ENVIRONMENT VARIABLES:');
+console.log('Keys available:', Object.keys(process.env).filter(key => key.includes('STRIPE') || key.includes('DATABASE')).sort());
+console.log('Raw env check:', {
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? 'EXISTS' : 'MISSING',
+  DATABASE_URL: process.env.DATABASE_URL ? 'EXISTS' : 'MISSING',
+  NODE_ENV: process.env.NODE_ENV
+});
   
   // Initialize database tables
   await initializeDatabase();
