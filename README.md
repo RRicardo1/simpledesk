@@ -33,3 +33,4 @@ simpledesk/
 4. Configure third-party integrations
 
 Target: Generate $467+ daily ($14K/month) within 8 months.# Force Railway redeploy Wed Aug  6 14:29:44 MDT 2025
+# Trigger deployment with DATABASE_URL Wed Aug  6 14:52:14 MDT 2025
