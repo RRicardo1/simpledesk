@@ -1,24 +1,14 @@
 const express = require('express');
 
-// Parse Stripe config from JSON environment variable or use raw value
-let stripeSecretKey;
-try {
-  if (process.env.STRIPE_CONFIG) {
-    // Try parsing as JSON first
-    try {
-      const stripeConfig = JSON.parse(process.env.STRIPE_CONFIG);
-      stripeSecretKey = stripeConfig.secret_key;
-    } catch (jsonError) {
-      // If JSON parsing fails, use the raw value (assuming it's the key itself)
-      stripeSecretKey = process.env.STRIPE_CONFIG;
-    }
-  } else {
-    stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-  }
-} catch (error) {
-  console.log('Using fallback STRIPE_SECRET_KEY');
-  stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-}
+// Get Stripe secret key - simplified approach
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_CONFIG;
+
+console.log('=== STRIPE CONFIGURATION DEBUG ===');
+console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
+console.log('STRIPE_CONFIG exists:', !!process.env.STRIPE_CONFIG);
+console.log('Final stripeSecretKey exists:', !!stripeSecretKey);
+console.log('Final stripeSecretKey first 10 chars:', stripeSecretKey ? stripeSecretKey.substring(0, 10) : 'undefined');
+console.log('===================================');
 
 const stripe = require('stripe')(stripeSecretKey);
 const db = require('../config/database');
