@@ -1,16 +1,38 @@
 const express = require('express');
 
-// Get Stripe secret key - simplified approach
+// Get Stripe secret key with comprehensive debugging
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_CONFIG;
 
 console.log('=== STRIPE CONFIGURATION DEBUG ===');
+console.log('All environment variables:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
 console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
+console.log('STRIPE_SECRET_KEY value:', process.env.STRIPE_SECRET_KEY ? 'FOUND' : 'NOT FOUND');
 console.log('STRIPE_CONFIG exists:', !!process.env.STRIPE_CONFIG);
+console.log('STRIPE_CONFIG value:', process.env.STRIPE_CONFIG ? 'FOUND' : 'NOT FOUND');
 console.log('Final stripeSecretKey exists:', !!stripeSecretKey);
 console.log('Final stripeSecretKey first 10 chars:', stripeSecretKey ? stripeSecretKey.substring(0, 10) : 'undefined');
 console.log('===================================');
 
-const stripe = require('stripe')(stripeSecretKey);
+// Initialize Stripe with error handling
+let stripe;
+try {
+  if (!stripeSecretKey) {
+    throw new Error('No Stripe secret key found in environment variables');
+  }
+  stripe = require('stripe')(stripeSecretKey);
+  console.log('✅ Stripe initialized successfully');
+} catch (error) {
+  console.error('❌ Stripe initialization failed:', error.message);
+  // Create a mock stripe object to prevent crashes
+  stripe = {
+    balance: {
+      retrieve: async () => { throw new Error('Stripe not configured properly'); }
+    }
+  };
+}
 const db = require('../config/database');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 
