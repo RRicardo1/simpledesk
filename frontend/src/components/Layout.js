@@ -11,7 +11,8 @@ import {
   BellIcon,
   UserCircleIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  CreditCardIcon
 } from '@heroicons/react/24/outline';
 
 const navigation = [
@@ -20,6 +21,7 @@ const navigation = [
   { name: 'Chat', href: '/chat', icon: ChatBubbleLeftRightIcon },
   { name: 'Knowledge Base', href: '/knowledge-base', icon: BookOpenIcon },
   { name: 'Users', href: '/users', icon: UsersIcon },
+  { name: 'Billing', href: '/billing', icon: CreditCardIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
 ];
 
