@@ -1,7 +1,12 @@
 const express = require('express');
 
-// Get Stripe secret key with comprehensive debugging
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_CONFIG;
+// Get Stripe secret key from environment variables only
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+
+if (!stripeSecretKey) {
+  console.error('❌ STRIPE_SECRET_KEY environment variable is required');
+  process.exit(1);
+}
 
 console.log('=== STRIPE CONFIGURATION DEBUG ===');
 console.log('All environment variables:');
@@ -101,6 +106,132 @@ router.get('/subscription', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Get subscription error:', error);
     res.status(500).json({ error: 'Failed to get subscription' });
+  }
+});
+
+// Create subscription with server-side payment method (for testing)
+router.post('/subscribe-test', authenticateToken, requireRole(['admin']), async (req, res) => {
+  const { plan } = req.body;
+
+  try {
+    console.log('=== TEST SUBSCRIPTION CREATION START ===');
+    console.log('Plan:', plan);
+    console.log('User ID:', req.user.userId);
+    console.log('Organization ID:', req.user.organization_id);
+
+    if (!plan) {
+      return res.status(400).json({ error: 'Plan is required' });
+    }
+
+    // Create prices dynamically for testing
+    const planDetails = {
+      starter: { amount: 2900, name: 'Starter Plan' },   // $29.00
+      growth: { amount: 5900, name: 'Growth Plan' },     // $59.00
+      business: { amount: 9900, name: 'Business Plan' }   // $99.00
+    };
+
+    if (!planDetails[plan]) {
+      return res.status(400).json({ error: 'Invalid plan' });
+    }
+
+    // Create or get product for this plan
+    let product;
+    try {
+      const products = await stripe.products.list({ limit: 10 });
+      product = products.data.find(p => p.name === planDetails[plan].name);
+      
+      if (!product) {
+        product = await stripe.products.create({
+          name: planDetails[plan].name,
+          description: `SimpleDesk ${planDetails[plan].name} - Testing`
+        });
+        console.log('Created product:', product.id);
+      }
+    } catch (error) {
+      console.log('Product creation/lookup error:', error);
+    }
+
+    // Create price for this subscription
+    let price;
+    try {
+      price = await stripe.prices.create({
+        currency: 'usd',
+        unit_amount: planDetails[plan].amount,
+        recurring: { interval: 'month' },
+        product: product.id,
+      });
+      console.log('Created price:', price.id);
+    } catch (error) {
+      console.log('Price creation error:', error);
+      return res.status(500).json({ 
+        error: 'Failed to create price',
+        details: error.message
+      });
+    }
+
+    // Get organization
+    const orgResult = await db.query(
+      'SELECT id, name, stripe_customer_id FROM organizations WHERE id = $1',
+      [req.user.organization_id]
+    );
+
+    const org = orgResult.rows[0];
+    let customerId = org.stripe_customer_id;
+
+    // Create or get customer
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: req.user.email,
+        name: org.name,
+      });
+      customerId = customer.id;
+
+      // Update organization with customer ID
+      await db.query(
+        'UPDATE organizations SET stripe_customer_id = $1 WHERE id = $2',
+        [customerId, req.user.organization_id]
+      );
+    }
+
+    // Create customer with test payment source (simpler approach)
+    const source = await stripe.customers.createSource(customerId, {
+      source: 'tok_visa' // Stripe's test Visa token
+    });
+
+    // Set as default source
+    await stripe.customers.update(customerId, {
+      default_source: source.id,
+    });
+
+    // Create subscription with automatic payment
+    const subscription = await stripe.subscriptions.create({
+      customer: customerId,
+      items: [{ price: price.id }],
+    });
+
+    // Update organization with subscription info
+    await db.query(
+      'UPDATE organizations SET plan = $1, stripe_subscription_id = $2 WHERE id = $3',
+      [plan, subscription.id, req.user.organization_id]
+    );
+
+    res.json({
+      message: 'Test subscription created successfully',
+      subscriptionId: subscription.id,
+      sourceId: source.id,
+      priceId: price.id,
+      productId: product.id,
+      amount: planDetails[plan].amount,
+      status: subscription.status
+    });
+
+  } catch (error) {
+    console.error('Create test subscription error:', error);
+    res.status(500).json({ 
+      error: 'Failed to create subscription',
+      details: error.message,
+      type: error.type || 'unknown'
+    });
   }
 });
 

@@ -1,4 +1,4 @@
-# SimpleDesk Deployment Guide
+# MySimpleDesk Deployment Guide
 
 ## Prerequisites
 

@@ -32,11 +32,16 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    // Create organization
+    // Create organization with 30-day trial
     const organizationId = uuidv4();
+    const trialStartDate = new Date();
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialStartDate.getDate() + 30); // 30-day trial
+    
     await db.query(
-      'INSERT INTO organizations (id, name, plan, status) VALUES ($1, $2, $3, $4)',
-      [organizationId, organizationName, 'starter', 'active']
+      `INSERT INTO organizations (id, name, plan, status, is_trial, trial_start_date, trial_end_date, trial_status) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [organizationId, organizationName, 'starter', 'active', true, trialStartDate, trialEndDate, 'active']
     );
 
     // Hash password

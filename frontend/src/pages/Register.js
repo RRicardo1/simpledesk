@@ -66,7 +66,7 @@ const Register = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h1 className="text-center text-3xl font-bold text-primary-600 mb-2">
-            SimpleDesk
+            MySimpleDesk
           </h1>
           <h2 className="text-center text-2xl font-bold text-gray-900">
             Start your free trial

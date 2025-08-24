@@ -4,9 +4,9 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import axios from 'axios';
 
-// Initialize Stripe
-const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_51Rote9QKQnR8VR9RyKR30jpkeGwejAbZyoWi6vZ5P1VVhfxggFLAnc4GXPA3prBAfylMZxGMaCZUhaWOEA5zzjHc00UbupmGtJ';
-const stripePromise = loadStripe(STRIPE_KEY);
+// Initialize Stripe - Handle invalid keys gracefully
+const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
 const BillingPage = () => {
   const { user } = useAuth();
@@ -92,6 +92,28 @@ const BillingPage = () => {
 
         {subscription?.subscription ? (
           <CurrentSubscription subscription={subscription} onCancel={fetchSubscription} />
+        ) : !STRIPE_KEY ? (
+          <div className="mt-12 max-w-2xl mx-auto">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">⚠️ Stripe Configuration Required</h2>
+              <p className="text-gray-700 mb-4">
+                The Stripe publishable key is not configured. To enable payment processing:
+              </p>
+              <ol className="list-decimal list-inside space-y-2 text-gray-700 mb-4">
+                <li>Set the <code>REACT_APP_STRIPE_PUBLISHABLE_KEY</code> environment variable</li>
+                <li>Restart the development server</li>
+              </ol>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-medium text-blue-900 mb-2">For Testing:</h3>
+                <p className="text-blue-700 text-sm">
+                  You can test the billing API directly at: 
+                  <a href="/billing-mock.html" className="underline ml-1" target="_blank">
+                    Mock Billing Test Page
+                  </a>
+                </p>
+              </div>
+            </div>
+          </div>
         ) : (
           <Elements stripe={stripePromise}>
             <SubscriptionPlans 

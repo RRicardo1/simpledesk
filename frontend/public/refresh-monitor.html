@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Refresh Monitor</title>
+    <meta http-equiv="refresh" content="300">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 800px; 
+            background: rgba(255,255,255,0.1); 
+            padding: 20px; 
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .status { 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: rgba(0,255,0,0.3); }
+        .warning { background: rgba(255,255,0,0.3); }
+        .error { background: rgba(255,0,0,0.3); }
+        .button { 
+            background: rgba(255,255,255,0.2); 
+            color: white; 
+            border: 1px solid rgba(255,255,255,0.3); 
+            padding: 10px 20px; 
+            margin: 5px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 16px;
+        }
+        .button:hover { background: rgba(255,255,255,0.3); }
+        .log { 
+            background: rgba(0,0,0,0.3); 
+            padding: 10px; 
+            height: 200px; 
+            overflow-y: scroll; 
+            font-family: monospace; 
+            font-size: 12px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Browser Refresh Monitor</h1>
+        
+        <div id="status" class="status warning">
+            Monitoring for unexpected refreshes...
+        </div>
+        
+        <div>
+            <strong>Current Time:</strong> <span id="current-time"></span><br>
+            <strong>Page Loaded:</strong> <span id="load-time"></span><br>
+            <strong>Refresh Count:</strong> <span id="refresh-count">0</span><br>
+            <strong>Last Refresh:</strong> <span id="last-refresh">Never</span>
+        </div>
+        
+        <h2>Actions</h2>
+        <button class="button" onclick="testBasicFunction()">Test Basic Function</button>
+        <button class="button" onclick="simulateRefresh()">Simulate Refresh</button>
+        <button class="button" onclick="clearStorage()">Clear Storage</button>
+        <button class="button" onclick="goToReact()">Go to React App</button>
+        
+        <h2>Logs</h2>
+        <div id="logs" class="log"></div>
+        
+        <h2>Instructions</h2>
+        <ol>
+            <li>Keep this page open in one tab</li>
+            <li>Open the React app in another tab</li>
+            <li>Navigate to /chat and /knowledge-base</li>
+            <li>Watch for any unexpected refreshes here</li>
+            <li>Check if refresh count increases automatically</li>
+        </ol>
+    </div>
+
+    <script>
+        let startTime = new Date();
+        let refreshCount = parseInt(localStorage.getItem('refreshCount') || '0');
+        let logEntries = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] ${message}`;
+            logEntries.push(entry);
+            
+            const logDiv = document.getElementById('logs');
+            logDiv.innerHTML = logEntries.slice(-20).join('<br>');
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            console.log(`[${type}] ${entry}`);
+        }
+        
+        function updateTime() {
+            document.getElementById('current-time').textContent = new Date().toLocaleString();
+        }
+        
+        function testBasicFunction() {
+            log('✅ Basic function test - JavaScript is working');
+            document.getElementById('status').textContent = 'Basic functions working correctly';
+            document.getElementById('status').className = 'status success';
+        }
+        
+        function simulateRefresh() {
+            log('🔄 Simulating refresh...');
+            refreshCount++;
+            localStorage.setItem('refreshCount', refreshCount);
+            localStorage.setItem('lastRefresh', new Date().toISOString());
+            window.location.reload();
+        }
+        
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            refreshCount = 0;
+            log('🧹 Browser storage cleared');
+            updateDisplay();
+        }
+        
+        function goToReact() {
+            log('🔄 Navigating to React app...');
+            window.open('http://localhost:3000', '_blank');
+        }
+        
+        function updateDisplay() {
+            document.getElementById('refresh-count').textContent = refreshCount;
+            document.getElementById('load-time').textContent = startTime.toLocaleString();
+            
+            const lastRefresh = localStorage.getItem('lastRefresh');
+            if (lastRefresh) {
+                document.getElementById('last-refresh').textContent = new Date(lastRefresh).toLocaleString();
+            }
+        }
+        
+        function checkForUnexpectedRefresh() {
+            const now = new Date();
+            const timeSinceLoad = (now - startTime) / 1000;
+            
+            if (refreshCount > 0 && timeSinceLoad < 5) {
+                log('⚠️ POSSIBLE UNEXPECTED REFRESH DETECTED!', 'warning');
+                document.getElementById('status').textContent = 'WARNING: Unexpected refresh detected!';
+                document.getElementById('status').className = 'status error';
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDisplay();
+            log('🚀 Refresh monitor initialized');
+            
+            if (refreshCount > 0) {
+                log(`⚠️ Detected ${refreshCount} previous refreshes`);
+            }
+            
+            // Update time every second
+            setInterval(updateTime, 1000);
+            updateTime();
+            
+            // Check for unexpected refreshes
+            setTimeout(checkForUnexpectedRefresh, 1000);
+            
+            // Monitor page visibility
+            document.addEventListener('visibilitychange', function() {
+                log(`👁️ Page visibility: ${document.visibilityState}`);
+            });
+            
+            // Monitor errors
+            window.addEventListener('error', function(e) {
+                log(`❌ JavaScript error: ${e.message}`, 'error');
+            });
+            
+            // Monitor before unload
+            window.addEventListener('beforeunload', function() {
+                log('🚪 Page about to unload');
+            });
+            
+            log('✅ All event listeners attached');
+        });
+    </script>
+</body>
+</html>

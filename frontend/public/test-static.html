@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Static Test</title>
+</head>
+<body>
+    <h1>Static Test Page</h1>
+    <p>This is a completely static HTML page with no JavaScript.</p>
+    <p>Current time: <span id="time"></span></p>
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleString();
+        console.log('Static page loaded at:', new Date().toISOString());
+    </script>
+</body>
+</html>

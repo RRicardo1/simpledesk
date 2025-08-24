@@ -3,6 +3,12 @@ const db = require('./database');
 async function initializeDatabase() {
   try {
     console.log('🗄️ Initializing database tables...');
+    
+    // Skip database initialization if using mock database
+    if (!process.env.DATABASE_URL) {
+      console.log('🔧 Skipping database initialization (no DATABASE_URL - using mock DB)');
+      return true;
+    }
 
     // Create UUID extension
     await db.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
@@ -41,6 +47,27 @@ async function initializeDatabase() {
       )
     `);
     console.log('✅ Users table created');
+
+    // Create customers table for customer portal
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS customers (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        email VARCHAR(255) NOT NULL,
+        password_hash VARCHAR(255),
+        first_name VARCHAR(100),
+        last_name VARCHAR(100),
+        phone VARCHAR(50),
+        avatar_url VARCHAR(500),
+        status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+        email_verified BOOLEAN DEFAULT false,
+        last_login_at TIMESTAMP WITH TIME ZONE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(organization_id, email)
+      )
+    `);
+    console.log('✅ Customers table created');
 
     // Create tickets table
     await db.query(`
@@ -110,6 +137,106 @@ async function initializeDatabase() {
     `);
     console.log('✅ Knowledge base articles table created');
 
+    // Chat sessions table for AI and human support
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS chat_sessions (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        visitor_name VARCHAR(255),
+        visitor_email VARCHAR(255),
+        visitor_ip VARCHAR(45),
+        status VARCHAR(50) DEFAULT 'active',
+        assigned_agent_id UUID REFERENCES users(id),
+        needs_human BOOLEAN DEFAULT false,
+        transfer_reason TEXT,
+        transferred_at TIMESTAMP WITH TIME ZONE,
+        started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        ended_at TIMESTAMP WITH TIME ZONE,
+        last_message TEXT,
+        ai_enabled BOOLEAN DEFAULT true
+      )
+    `);
+    console.log('✅ Chat sessions table created');
+
+    // Chat messages table for AI and human conversations
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        session_id UUID NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+        sender_type VARCHAR(20) NOT NULL, -- 'customer', 'agent', 'ai', 'system'
+        sender_id UUID REFERENCES users(id), -- NULL for customer/ai messages
+        sender_name VARCHAR(255),
+        message TEXT NOT NULL,
+        message_type VARCHAR(50) DEFAULT 'text', -- 'text', 'image', 'file', 'system'
+        is_ai_response BOOLEAN DEFAULT false,
+        ai_confidence VARCHAR(20), -- 'high', 'medium', 'low'
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `);
+    console.log('✅ Chat messages table created');
+
+    // Create automation rules table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS automation_rules (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        trigger_conditions JSONB NOT NULL,
+        actions JSONB NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        position INTEGER DEFAULT 0,
+        created_by UUID REFERENCES users(id),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `);
+    console.log('✅ Automation rules table created');
+
+    // Create SLA policies table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS sla_policies (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        conditions JSONB,
+        first_response_time INTEGER, -- minutes
+        resolution_time INTEGER, -- minutes
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `);
+    console.log('✅ SLA policies table created');
+
+    // Create automation logs table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS automation_logs (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        rule_id UUID NOT NULL REFERENCES automation_rules(id) ON DELETE CASCADE,
+        trigger_data JSONB NOT NULL,
+        status VARCHAR(20) DEFAULT 'success',
+        error_message TEXT,
+        executed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `);
+    console.log('✅ Automation logs table created');
+
+    // Create activity logs table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS activity_logs (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        ticket_id UUID REFERENCES tickets(id) ON DELETE CASCADE,
+        user_id UUID REFERENCES users(id),
+        action VARCHAR(100) NOT NULL,
+        details JSONB,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `);
+    console.log('✅ Activity logs table created');
+
     // Add missing columns to existing users table (if they don't exist)
     try {
       await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)');
@@ -128,6 +255,17 @@ async function initializeDatabase() {
       console.log('✅ Missing Stripe columns added to organizations');
     } catch (error) {
       console.log('⚠️ Stripe column addition skipped (likely already exist):', error.message);
+    }
+
+    // Add trial tracking columns to organizations table (if they don't exist)
+    try {
+      await db.query('ALTER TABLE organizations ADD COLUMN IF NOT EXISTS trial_start_date TIMESTAMP WITH TIME ZONE');
+      await db.query('ALTER TABLE organizations ADD COLUMN IF NOT EXISTS trial_end_date TIMESTAMP WITH TIME ZONE');
+      await db.query('ALTER TABLE organizations ADD COLUMN IF NOT EXISTS trial_status VARCHAR(50) DEFAULT \'active\' CHECK (trial_status IN (\'active\', \'expired\', \'converted\'))');
+      await db.query('ALTER TABLE organizations ADD COLUMN IF NOT EXISTS is_trial BOOLEAN DEFAULT true');
+      console.log('✅ Trial tracking columns added to organizations');
+    } catch (error) {
+      console.log('⚠️ Trial column addition skipped (likely already exist):', error.message);
     }
 
     console.log('🎉 Database initialization completed successfully!');

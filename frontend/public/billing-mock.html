@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Billing System - Mock Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; background: white; padding: 20px; border-radius: 8px; margin: 0 auto; }
+        .button { 
+            background: #007acc; color: white; border: none; padding: 10px 20px; 
+            margin: 10px 0; border-radius: 5px; cursor: pointer; font-size: 16px; display: inline-block;
+        }
+        .button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .success { background: #d4edda; padding: 15px; margin: 10px 0; border-radius: 5px; color: #155724; }
+        .error { background: #f8d7da; padding: 15px; margin: 10px 0; border-radius: 5px; color: #721c24; }
+        .warning { background: #fff3cd; padding: 15px; margin: 10px 0; border-radius: 5px; color: #856404; }
+        .log { background: #f8f8f8; padding: 10px; height: 300px; overflow-y: scroll; font-family: monospace; font-size: 12px; }
+        .plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0; }
+        .plan-card { border: 2px solid #ddd; border-radius: 8px; padding: 20px; cursor: pointer; transition: all 0.3s; }
+        .plan-card:hover { border-color: #007acc; }
+        .plan-card.selected { border-color: #007acc; background-color: #f0f8ff; }
+        .mock-card { 
+            border: 2px dashed #007acc; padding: 20px; border-radius: 8px; margin: 10px 0;
+            background: #f0f8ff; text-align: center;
+        }
+        input, select { 
+            width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; 
+            border-radius: 4px; font-size: 16px; box-sizing: border-box;
+        }
+        h1, h2 { color: #333; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Billing System - Mock Payment Test</h1>
+        
+        <div class="warning">
+            <strong>Mock Mode:</strong> This simulates the payment flow without requiring valid Stripe keys.
+        </div>
+
+        <h2>1. Authentication Test</h2>
+        <input type="email" id="email" placeholder="Email" value="test@test.com">
+        <input type="password" id="password" placeholder="Password" value="password123">
+        <button class="button" onclick="testLogin()">Login & Get Token</button>
+        
+        <div id="auth-status" class="status"></div>
+
+        <h2>2. Current Subscription</h2>
+        <button class="button" onclick="getCurrentSubscription()" id="get-sub-btn">Check Current Subscription</button>
+        <div id="subscription-status"></div>
+
+        <h2>3. Backend API Test</h2>
+        <button class="button" onclick="testBackendAPI()">Test Backend Connection</button>
+        <div id="backend-status"></div>
+
+        <h2>4. Choose Plan</h2>
+        <div class="plan-grid">
+            <div class="plan-card" data-plan="starter" onclick="selectPlan('starter')">
+                <h3>Starter - $29/month</h3>
+                <ul>
+                    <li>Up to 3 agents</li>
+                    <li>1,000 tickets/month</li>
+                    <li>Email support</li>
+                </ul>
+            </div>
+            <div class="plan-card" data-plan="growth" onclick="selectPlan('growth')">
+                <h3>Growth - $59/month</h3>
+                <ul>
+                    <li>Up to 10 agents</li>
+                    <li>5,000 tickets/month</li>
+                    <li>Chat support</li>
+                </ul>
+            </div>
+            <div class="plan-card" data-plan="business" onclick="selectPlan('business')">
+                <h3>Business - $99/month</h3>
+                <ul>
+                    <li>Unlimited agents</li>
+                    <li>Unlimited tickets</li>
+                    <li>Priority support</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="selected-plan" class="status" style="display: none;"></div>
+
+        <h2>5. Mock Payment Test</h2>
+        <div class="mock-card">
+            <h3>💳 Mock Credit Card</h3>
+            <p><strong>Card Number:</strong> 4242 4242 4242 4242</p>
+            <p><strong>Expiry:</strong> 12/25 | <strong>CVC:</strong> 123</p>
+            <p><em>This is a simulation - no real payment will be processed</em></p>
+        </div>
+        <button class="button" onclick="testMockPayment()" id="pay-btn" disabled>Test Mock Subscription Creation</button>
+        
+        <div id="payment-status"></div>
+
+        <h2>6. Direct Backend API Test</h2>
+        <button class="button" onclick="testDirectAPI()" id="direct-api-btn" disabled>Test Direct API Call</button>
+        <div id="direct-api-status"></div>
+
+        <h2>Logs</h2>
+        <div id="logs" class="log"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+        let selectedPlanId = null;
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('logs');
+            logElement.innerHTML += `[${timestamp}] ${message}<br>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `status ${type}`;
+            element.innerHTML = message;
+            element.style.display = 'block';
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            log('🔐 Testing login...');
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    log('✅ Login successful');
+                    showStatus('auth-status', '✅ Authenticated successfully', 'success');
+                    document.getElementById('get-sub-btn').disabled = false;
+                    document.getElementById('direct-api-btn').disabled = false;
+                } else {
+                    log('❌ Login failed: ' + data.error);
+                    showStatus('auth-status', '❌ Login failed: ' + data.error, 'error');
+                }
+            } catch (error) {
+                log('❌ Login error: ' + error.message);
+                showStatus('auth-status', '❌ Login error: ' + error.message, 'error');
+            }
+        }
+
+        async function getCurrentSubscription() {
+            if (!authToken) {
+                showStatus('subscription-status', '❌ Please login first', 'error');
+                return;
+            }
+            
+            log('📊 Checking current subscription...');
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/billing/subscription', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✅ Subscription data retrieved');
+                    let status = `<strong>Current Plan:</strong> ${data.plan}<br>`;
+                    if (data.subscription) {
+                        status += `<strong>Status:</strong> ${data.subscription.status}<br>`;
+                        status += `<strong>Next Billing:</strong> ${new Date(data.subscription.currentPeriodEnd * 1000).toLocaleDateString()}`;
+                    } else {
+                        status += `<strong>Status:</strong> No active subscription`;
+                    }
+                    showStatus('subscription-status', status, 'success');
+                } else {
+                    log('❌ Failed to get subscription: ' + data.error);
+                    showStatus('subscription-status', '❌ ' + data.error, 'error');
+                }
+            } catch (error) {
+                log('❌ Subscription check error: ' + error.message);
+                showStatus('subscription-status', '❌ ' + error.message, 'error');
+            }
+        }
+
+        async function testBackendAPI() {
+            log('🔧 Testing backend API connection...');
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/billing/test-stripe');
+                const data = await response.json();
+                
+                if (data.success) {
+                    log('✅ Backend API connection successful');
+                    showStatus('backend-status', '✅ Backend API is working properly<br>Stripe connection: ' + (data.stripeConnected ? 'Connected' : 'Not connected'), 'success');
+                } else {
+                    log('❌ Backend API connection failed: ' + data.error);
+                    showStatus('backend-status', '❌ Backend API error: ' + data.error, 'error');
+                }
+            } catch (error) {
+                log('❌ Backend API test error: ' + error.message);
+                showStatus('backend-status', '❌ ' + error.message, 'error');
+            }
+        }
+
+        function selectPlan(planId) {
+            // Remove previous selection
+            document.querySelectorAll('.plan-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Select new plan
+            document.querySelector(`[data-plan="${planId}"]`).classList.add('selected');
+            selectedPlanId = planId;
+            
+            log(`📋 Selected plan: ${planId}`);
+            showStatus('selected-plan', `✅ Selected plan: ${planId.charAt(0).toUpperCase() + planId.slice(1)}`, 'success');
+            
+            document.getElementById('pay-btn').disabled = !authToken || !selectedPlanId;
+        }
+
+        async function testMockPayment() {
+            if (!authToken || !selectedPlanId) {
+                showStatus('payment-status', '❌ Please login and select a plan first', 'error');
+                return;
+            }
+            
+            log('💳 Testing mock payment simulation...');
+            showStatus('payment-status', '⏳ Simulating payment process...', 'warning');
+            
+            // Simulate payment method creation delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            log('💳 Mock payment method created: pm_mock_123456');
+            log('📤 Sending subscription request to backend...');
+            
+            try {
+                // Use Stripe's standard test payment method IDs
+                const testPaymentMethods = [
+                    'pm_card_visa',           // Visa test card
+                    'pm_card_visa_debit',     // Visa debit test card
+                    'pm_card_mastercard',     // Mastercard test card
+                ];
+                
+                const paymentMethodId = testPaymentMethods[0]; // Use Visa test card
+                log('💳 Using Stripe test payment method: ' + paymentMethodId);
+                
+                const response = await fetch('http://localhost:3001/api/billing/subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        plan: selectedPlanId,
+                        paymentMethodId: paymentMethodId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✅ Mock subscription creation successful');
+                    let message = '✅ Mock subscription created successfully!<br>';
+                    message += `<strong>Plan:</strong> ${selectedPlanId}<br>`;
+                    message += `<strong>Response:</strong> ${data.message}<br>`;
+                    if (data.subscriptionId) {
+                        message += `<strong>Subscription ID:</strong> ${data.subscriptionId}`;
+                    }
+                    showStatus('payment-status', message, 'success');
+                    
+                    // Refresh subscription status
+                    setTimeout(getCurrentSubscription, 2000);
+                } else {
+                    log('❌ Mock subscription creation failed: ' + data.error);
+                    let errorMsg = '❌ Subscription creation failed<br>';
+                    errorMsg += `<strong>Error:</strong> ${data.error}<br>`;
+                    if (data.details) {
+                        errorMsg += `<strong>Details:</strong> ${data.details}<br>`;
+                    }
+                    if (data.type) {
+                        errorMsg += `<strong>Type:</strong> ${data.type}`;
+                    }
+                    showStatus('payment-status', errorMsg, 'error');
+                }
+                
+            } catch (error) {
+                log('❌ Mock payment error: ' + error.message);
+                showStatus('payment-status', '❌ Network error: ' + error.message, 'error');
+            }
+        }
+
+        async function testDirectAPI() {
+            if (!authToken) {
+                showStatus('direct-api-status', '❌ Please login first', 'error');
+                return;
+            }
+            
+            log('🔌 Testing direct API call without Stripe frontend...');
+            
+            try {
+                const testData = {
+                    plan: 'starter',
+                    paymentMethodId: 'pm_card_visa'  // Valid Stripe test payment method
+                };
+                
+                log('📤 Sending test subscription request...');
+                
+                const response = await fetch('http://localhost:3001/api/billing/subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const data = await response.json();
+                log('📥 Response status: ' + response.status);
+                log('📥 Response data: ' + JSON.stringify(data, null, 2));
+                
+                if (response.ok) {
+                    showStatus('direct-api-status', '✅ Direct API call successful<br>Check logs for details', 'success');
+                } else {
+                    showStatus('direct-api-status', '❌ API call failed<br>Error: ' + data.error, 'error');
+                }
+                
+            } catch (error) {
+                log('❌ Direct API error: ' + error.message);
+                showStatus('direct-api-status', '❌ ' + error.message, 'error');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Mock billing test page loaded');
+            log('ℹ️ This page tests the billing system without requiring frontend Stripe keys');
+        });
+    </script>
+</body>
+</html>

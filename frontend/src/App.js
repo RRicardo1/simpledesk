@@ -10,23 +10,48 @@ import TicketDetail from './pages/TicketDetail';
 import NewTicket from './pages/NewTicket';
 import UserManagement from './pages/UserManagement';
 import KnowledgeBase from './pages/KnowledgeBase';
+import KnowledgeBaseSimple from './pages/KnowledgeBaseSimple';
 import Chat from './pages/Chat';
+import ChatTest from './pages/ChatTest';
+import ChatBasic from './pages/ChatBasic';
+import ChatUltimate from './pages/ChatUltimate';
+import ChatWithLayout from './pages/ChatWithLayout';
+import DebugLogger from './pages/DebugLogger';
+import IsolatedTest from './pages/IsolatedTest';
+import AiTest from './pages/AiTest';
 import Settings from './pages/Settings';
 import Billing from './pages/Billing';
+import Automation from './pages/Automation';
+import CustomerPortal from './pages/CustomerPortal';
+import Homepage from './pages/Homepage';
+import About from './pages/About';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import SetupDemo from './pages/SetupDemo';
+import SetupDemoSimple from './pages/SetupDemoSimple';
 import Layout from './components/Layout';
 import './index.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: 0, // Don't retry by default
       staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      refetchOnReconnect: false, // Don't refetch on reconnect
+      refetchInterval: false, // Disable background refetch
     },
   },
 });
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
+  
+  console.log('ProtectedRoute render:', { 
+    hasUser: !!user, 
+    loading, 
+    timestamp: new Date().toISOString() 
+  });
   
   if (loading) {
     return (
@@ -130,7 +155,55 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout>
-              <KnowledgeBase />
+              <KnowledgeBaseSimple />
+            </Layout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/knowledge-base/new" 
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <div className="p-8">
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">Create New Article</h1>
+                <p className="text-gray-600">Article creation form would go here.</p>
+                <button onClick={() => window.history.back()} className="mt-4 btn-secondary">
+                  Back to Knowledge Base
+                </button>
+              </div>
+            </Layout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/knowledge-base/:id" 
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <div className="p-8">
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">Article View</h1>
+                <p className="text-gray-600">Article content would go here.</p>
+                <button onClick={() => window.history.back()} className="mt-4 btn-secondary">
+                  Back to Knowledge Base
+                </button>
+              </div>
+            </Layout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/knowledge-base/:id/edit" 
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <div className="p-8">
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">Edit Article</h1>
+                <p className="text-gray-600">Article editing form would go here.</p>
+                <button onClick={() => window.history.back()} className="mt-4 btn-secondary">
+                  Back to Knowledge Base
+                </button>
+              </div>
             </Layout>
           </ProtectedRoute>
         } 
@@ -140,10 +213,26 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout>
-              <Chat />
+              <div style={{padding: '20px'}}>
+                <h1>Chat Page Working</h1>
+                <p>Time: {new Date().toLocaleString()}</p>
+                <p>If you can see this without refreshing, navigation is working.</p>
+              </div>
             </Layout>
           </ProtectedRoute>
-        } 
+        }
+      />
+      <Route 
+        path="/chat-layout" 
+        element={<ChatWithLayout />}
+      />
+      <Route 
+        path="/debug" 
+        element={<DebugLogger />}
+      />
+      <Route 
+        path="/ai-test" 
+        element={<AiTest />}
       />
       <Route 
         path="/settings" 
@@ -165,9 +254,33 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
+      <Route 
+        path="/automation" 
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Automation />
+            </Layout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/customer-portal" 
+        element={<CustomerPortal />}
+      />
+      <Route 
+        path="/homepage" 
+        element={<Homepage />}
+      />
       
-      {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/dashboard" />} />
+      {/* Public legal pages */}
+      <Route path="/about" element={<About />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/demo" element={<SetupDemo />} />
+      
+      {/* Homepage for non-authenticated users */}
+      <Route path="/" element={<Homepage />} />
     </Routes>
   );
 }

@@ -10,6 +10,7 @@ import {
   ClockIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
+import TrialBanner from '../components/TrialBanner';
 
 const Dashboard = () => {
   // Fetch dashboard statistics
@@ -94,6 +95,9 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8">
+      {/* Trial Banner */}
+      <TrialBanner />
+      
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>

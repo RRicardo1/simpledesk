@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Stripe Key Test</title>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <h1>Stripe Key Validation Test</h1>
+    <div id="result"></div>
+    
+    <script>
+        const STRIPE_KEY = 'pk_test_51Rote9QKQnR8VR9RyKR30jpkeGwejAbZyoWi6vZ5P1VVhfxggFLAnc4GXPA3prBAfylMZxGMaCZUhaWOEA5zzjHc00UbupmGtJ';
+        
+        try {
+            const stripe = Stripe(STRIPE_KEY);
+            document.getElementById('result').innerHTML = '✅ Stripe key is valid and loaded successfully!';
+            console.log('✅ Stripe initialized successfully');
+        } catch (error) {
+            document.getElementById('result').innerHTML = '❌ Stripe key error: ' + error.message;
+            console.error('❌ Stripe error:', error);
+        }
+    </script>
+</body>
+</html>

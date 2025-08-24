@@ -12,14 +12,17 @@ import {
   UserCircleIcon,
   Bars3Icon,
   XMarkIcon,
-  CreditCardIcon
+  CreditCardIcon,
+  BoltIcon
 } from '@heroicons/react/24/outline';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Tickets', href: '/tickets', icon: TicketIcon },
-  { name: 'Chat', href: '/chat', icon: ChatBubbleLeftRightIcon },
+  { name: 'Live Chat', href: '/chat', icon: ChatBubbleLeftRightIcon },
+  { name: 'AI Assistant', href: '/ai-test', icon: BoltIcon },
   { name: 'Knowledge Base', href: '/knowledge-base', icon: BookOpenIcon },
+  { name: 'Automation', href: '/automation', icon: CogIcon },
   { name: 'Users', href: '/users', icon: UsersIcon },
   { name: 'Billing', href: '/billing', icon: CreditCardIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
@@ -53,7 +56,7 @@ const Layout = ({ children }) => {
           </div>
           <div className="h-0 flex-1 overflow-y-auto pt-5 pb-4">
             <div className="flex flex-shrink-0 items-center px-4">
-              <h1 className="text-xl font-bold text-primary-600">SimpleDesk</h1>
+              <h1 className="text-xl font-bold text-primary-600">MySimpleDesk</h1>
             </div>
             <nav className="mt-5 space-y-1 px-2">
               {navigation.map((item) => {
@@ -83,7 +86,7 @@ const Layout = ({ children }) => {
         <div className="flex min-h-0 flex-1 flex-col bg-white border-r border-gray-200">
           <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
             <div className="flex flex-shrink-0 items-center px-4">
-              <h1 className="text-xl font-bold text-primary-600">SimpleDesk</h1>
+              <h1 className="text-xl font-bold text-primary-600">MySimpleDesk</h1>
             </div>
             <nav className="mt-5 flex-1 space-y-1 px-2">
               {navigation.map((item) => {

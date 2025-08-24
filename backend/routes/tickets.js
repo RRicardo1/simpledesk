@@ -2,6 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/database');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const automationEngine = require('../services/automation');
 
 const router = express.Router();
 
@@ -220,12 +221,17 @@ router.post('/', authenticateToken, async (req, res) => {
        JSON.stringify({ subject, priority, source })]
     );
 
-    // TODO: Trigger automation rules
-    // TODO: Send notifications
+    // Trigger automation rules for new ticket
+    const createdTicket = result.rows[0];
+    try {
+      await automationEngine.onTicketCreated(createdTicket);
+    } catch (automationError) {
+      console.error('Automation trigger failed:', automationError);
+    }
 
     res.status(201).json({
       message: 'Ticket created successfully',
-      ticket: result.rows[0]
+      ticket: createdTicket
     });
 
   } catch (error) {
@@ -354,12 +360,28 @@ router.put('/:ticketId', authenticateToken, async (req, res) => {
       );
     }
 
-    // TODO: Send notifications for assignment changes
-    // TODO: Trigger automation rules
+    // Trigger automation rules for ticket updates
+    const updatedTicket = result.rows[0];
+    try {
+      // General ticket update automation
+      await automationEngine.onTicketUpdated(updatedTicket, changes);
+      
+      // Specific status change automation
+      if (changes.status) {
+        await automationEngine.onTicketStatusChanged(updatedTicket, changes.status.from, changes.status.to);
+      }
+      
+      // Specific assignment change automation
+      if (changes.assignee_id) {
+        await automationEngine.onTicketAssigned(updatedTicket, changes.assignee_id.from, changes.assignee_id.to);
+      }
+    } catch (automationError) {
+      console.error('Automation trigger failed:', automationError);
+    }
 
     res.json({
       message: 'Ticket updated successfully',
-      ticket: result.rows[0],
+      ticket: updatedTicket,
       changes
     });
 
@@ -418,8 +440,19 @@ router.post('/:ticketId/comments', authenticateToken, async (req, res) => {
        JSON.stringify({ is_public, has_attachments: attachments.length > 0 })]
     );
 
-    // TODO: Send notifications
-    // TODO: Trigger automation rules
+    // Trigger automation rules for comment addition
+    try {
+      const ticket = await db.query(
+        'SELECT * FROM tickets WHERE id = $1 AND organization_id = $2',
+        [ticketId, req.user.organization_id]
+      );
+      
+      if (ticket.rows.length > 0) {
+        await automationEngine.onCommentAdded(ticket.rows[0], result.rows[0]);
+      }
+    } catch (automationError) {
+      console.error('Automation trigger failed:', automationError);
+    }
 
     res.status(201).json({
       message: 'Comment added successfully',

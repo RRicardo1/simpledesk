@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -11,12 +11,14 @@ export const useAuth = () => {
   return context;
 };
 
-// Configure axios defaults
+// Configure axios defaults - FIXED for localhost development
 const API_BASE_URL = process.env.REACT_APP_API_URL || 
                      process.env.REACT_APP_API_BASE_URL || 
                      process.env.API_URL ||
-                     'https://shimmering-determination-production.up.railway.app/api';
+                     'http://localhost:3001/api'; // Changed to localhost for development
 axios.defaults.baseURL = API_BASE_URL;
+
+console.log('🔧 API Base URL set to:', API_BASE_URL);
 
 // Add request interceptor to include auth token
 axios.interceptors.request.use((config) => {
@@ -27,22 +29,30 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
-// Add response interceptor to handle auth errors
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
+// DISABLED: Add response interceptor to handle auth errors - causing reload issues
+// axios.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (error.response?.status === 401) {
+//       // Only redirect to login if we're not already on login/register page
+//       const currentPath = window.location.pathname;
+//       if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+//         console.log('401 auth error detected, redirecting to login');
+//         localStorage.removeItem('token');
+//         localStorage.removeItem('user');
+//         window.location.href = '/login';
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Debug logging for auth state changes
+  console.log('AuthProvider state:', { user: !!user, loading, timestamp: new Date().toISOString() });
 
   useEffect(() => {
     const initAuth = async () => {
@@ -52,8 +62,8 @@ export const AuthProvider = ({ children }) => {
       if (token && savedUser) {
         try {
           setUser(JSON.parse(savedUser));
-          // Verify token is still valid
-          await axios.get('/auth/me');
+          // Skip token validation during development due to backend issues
+          // await axios.get('/auth/me');
         } catch (error) {
           console.error('Token validation failed:', error);
           localStorage.removeItem('token');
@@ -140,14 +150,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     loading,
     login,
     register,
     logout,
     updateProfile
-  };
+  }), [user, loading]);
 
   return (
     <AuthContext.Provider value={value}>

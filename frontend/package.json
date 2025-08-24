@@ -1,7 +1,7 @@
 {
   "name": "simpledesk-frontend",
   "version": "1.0.0",
-  "description": "SimpleDesk Frontend Dashboard - Zendesk Alternative",
+  "description": "MySimpleDesk Frontend Dashboard - Traditional Platform Alternative",
   "private": true,
   "dependencies": {
     "@headlessui/react": "^1.7.17",
@@ -50,6 +50,5 @@
   "devDependencies": {
     "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7"
-  },
-  "proxy": "http://localhost:3001"
+  }
 }

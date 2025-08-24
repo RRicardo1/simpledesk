@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Domain Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 600px; background: white; padding: 20px; border-radius: 8px; }
+        .button { 
+            background: #007acc; color: white; border: none; padding: 10px 20px; 
+            margin: 10px; border-radius: 5px; cursor: pointer; font-size: 16px; display: block;
+        }
+        .info { background: #e7f3ff; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .alert { background: #ffe7e7; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .log { background: #f8f8f8; padding: 10px; height: 150px; overflow-y: scroll; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Domain & Navigation Test</h1>
+        
+        <div class="info">
+            <strong>Current Location:</strong> <span id="current-url"></span><br>
+            <strong>Current Host:</strong> <span id="current-host"></span><br>
+            <strong>Current Protocol:</strong> <span id="current-protocol"></span>
+        </div>
+
+        <h2>Test Navigation</h2>
+        <button class="button" onclick="testLocalNavigation()">🏠 Test /dashboard (should stay on localhost)</button>
+        <button class="button" onclick="testKnowledgeBase()">📚 Test /knowledge-base (should stay on localhost)</button>
+        <button class="button" onclick="testChat()">💬 Test /chat (should stay on localhost)</button>
+        
+        <h2>Direct Link Tests</h2>
+        <a href="/dashboard" target="_blank">Open /dashboard in new tab</a><br>
+        <a href="/knowledge-base" target="_blank">Open /knowledge-base in new tab</a><br>
+        <a href="/chat" target="_blank">Open /chat in new tab</a>
+        
+        <h2>Logs</h2>
+        <div id="logs" class="log"></div>
+        
+        <div class="alert" id="alert" style="display: none;"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('logs');
+            logElement.innerHTML += `[${timestamp}] ${message}<br>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function showAlert(message) {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.textContent = message;
+            alertDiv.style.display = 'block';
+            log('🚨 ALERT: ' + message);
+        }
+        
+        function testLocalNavigation() {
+            log('🧪 Testing navigation to /dashboard');
+            const originalHost = window.location.host;
+            log('Original host: ' + originalHost);
+            
+            // Test using window.location.href
+            window.location.href = '/dashboard';
+        }
+        
+        function testKnowledgeBase() {
+            log('🧪 Testing navigation to /knowledge-base');
+            const originalHost = window.location.host;
+            log('Original host: ' + originalHost);
+            
+            window.location.href = '/knowledge-base';
+        }
+        
+        function testChat() {
+            log('🧪 Testing navigation to /chat');
+            const originalHost = window.location.host;
+            log('Original host: ' + originalHost);
+            
+            window.location.href = '/chat';
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('current-url').textContent = window.location.href;
+            document.getElementById('current-host').textContent = window.location.host;
+            document.getElementById('current-protocol').textContent = window.location.protocol;
+            
+            log('🚀 Domain test page loaded');
+            log('Current URL: ' + window.location.href);
+            log('Current host: ' + window.location.host);
+            
+            // Check if we're on the correct domain
+            if (window.location.host !== 'localhost:3000' && !window.location.host.startsWith('127.0.0.1')) {
+                showAlert('WARNING: Not on localhost! Currently on: ' + window.location.host);
+            }
+            
+            // Monitor beforeunload to catch redirects
+            window.addEventListener('beforeunload', function(e) {
+                log('🚪 Page about to navigate away...');
+                log('Next URL will be determined by browser');
+            });
+            
+            // Monitor any location changes
+            let currentUrl = window.location.href;
+            setInterval(() => {
+                if (window.location.href !== currentUrl) {
+                    log('📍 URL changed from ' + currentUrl + ' to ' + window.location.href);
+                    currentUrl = window.location.href;
+                    
+                    if (window.location.host.includes('mysimpledesk.com')) {
+                        showAlert('🚨 REDIRECT TO PRODUCTION DETECTED! Domain: ' + window.location.host);
+                    }
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>

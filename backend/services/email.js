@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 
 class EmailService {
   constructor() {
-    this.transporter = nodemailer.createTransporter({
+    this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       secure: process.env.SMTP_PORT == 465,
@@ -256,7 +256,7 @@ ${org.name} Support Team
 
       const org = orgResult.rows[0];
       const fromEmail = process.env.FROM_EMAIL || 'support@simpledesk.com';
-      const fromName = org?.name ? `${org.name} Support` : 'SimpleDesk Support';
+      const fromName = org?.name ? `${org.name} Support` : 'MySimpleDesk Support';
 
       const mailOptions = {
         from: `${fromName} <${fromEmail}>`,

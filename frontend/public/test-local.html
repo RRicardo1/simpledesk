@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Local Test - No React</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .button { 
+            background: #007acc; color: white; border: none; padding: 10px 20px; 
+            margin: 10px; border-radius: 5px; cursor: pointer; font-size: 16px;
+        }
+        .success { background: #28a745; }
+        .warning { background: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Local Test - Pure HTML</h1>
+    <p><strong>Current URL:</strong> <span id="current-url"></span></p>
+    <p><strong>Current Time:</strong> <span id="current-time"></span></p>
+    
+    <h2>Navigation Tests</h2>
+    <button class="button" onclick="testRelativeLink()">Test Relative Navigation</button>
+    <button class="button" onclick="testHashLink()">Test Hash Navigation</button>
+    <button class="button success" onclick="testAlert()">Test Basic JavaScript</button>
+    
+    <h2>React App Links</h2>
+    <a href="/" class="button">Go to React App Root</a>
+    <a href="/chat" class="button warning">Go to /chat</a>
+    <a href="/knowledge-base" class="button warning">Go to /knowledge-base</a>
+    
+    <div id="log" style="background: white; padding: 10px; margin: 20px 0; height: 200px; overflow-y: scroll;"></div>
+    
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function testRelativeLink() {
+            log('Testing relative navigation...');
+            window.location.href = '/test-navigation.html';
+        }
+        
+        function testHashLink() {
+            log('Testing hash navigation...');
+            window.location.hash = '#test-' + Date.now();
+        }
+        
+        function testAlert() {
+            log('Testing basic JavaScript...');
+            alert('JavaScript is working! ✅');
+        }
+        
+        // Initialize
+        document.getElementById('current-url').textContent = window.location.href;
+        setInterval(() => {
+            document.getElementById('current-time').textContent = new Date().toLocaleString();
+        }, 1000);
+        
+        log('🚀 Local test page initialized');
+        log('Current URL: ' + window.location.href);
+        log('Ready for testing...');
+    </script>
+</body>
+</html>

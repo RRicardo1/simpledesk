@@ -66,6 +66,8 @@ app.use('/api/chat', require('./routes/chat'));
 app.use('/api/kb', require('./routes/knowledge-base'));
 app.use('/api/automation', require('./routes/automation'));
 app.use('/api/billing', require('./routes/billing'));
+app.use('/api/trial', require('./routes/trial'));
+app.use('/api/customer-portal', require('./routes/customer-portal'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -148,4 +150,8 @@ console.log('Raw env check:', {
   
   // Initialize database tables
   await initializeDatabase();
+  
+  console.log('🎉 SimpleDesk backend server is ready and running!');
+  console.log('🔗 Health check: http://localhost:' + PORT + '/api/health');
+  console.log('🤖 AI Test: http://localhost:3000/ai-test');
 });
