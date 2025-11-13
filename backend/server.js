@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const dotenv = require('dotenv');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
@@ -36,24 +37,90 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3001;
 
+// Rate limiting configuration
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 requests per windowMs
+  message: {
+    error: 'Too many authentication attempts, please try again later',
+    retryAfter: Math.ceil(15 * 60) // seconds
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting in development for localhost
+    return process.env.NODE_ENV === 'development' && 
+           (req.ip === '::1' || req.ip === '127.0.0.1' || req.ip === '::ffff:127.0.0.1');
+  }
+});
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    error: 'Too many requests, please try again later',
+    retryAfter: Math.ceil(15 * 60)
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    return process.env.NODE_ENV === 'development' && 
+           (req.ip === '::1' || req.ip === '127.0.0.1' || req.ip === '::ffff:127.0.0.1');
+  }
+});
+
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "wss:", "ws:"],
+    },
+  },
+  hsts: process.env.NODE_ENV === 'production' ? {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  } : false
+}));
 app.use(cors({
   origin: function (origin, callback) {
-    console.log('🌐 CORS Origin request:', origin);
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    // Only log in development mode
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🌐 CORS Origin request:', origin);
+    }
+    
+    // Allow requests with no origin only in development
+    if (!origin && process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+    
+    if (!origin) {
+      return callback(new Error('Origin required'));
+    }
     
     if (allOrigins.indexOf(origin) !== -1) {
-      console.log('✅ CORS Origin allowed:', origin);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ CORS Origin allowed:', origin);
+      }
       callback(null, true);
     } else {
-      console.log('❌ CORS Origin blocked:', origin);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('❌ CORS Origin blocked:', origin);
+      }
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true
 }));
+
+// Apply rate limiting
+app.use('/api', generalLimiter);
+app.use('/api/auth', authLimiter);
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -124,10 +191,17 @@ io.on('connection', (socket) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  // Log error for debugging (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.error('Error:', err.message);
+  } else {
+    // In production, log without exposing stack trace
+    console.error('Error occurred:', new Date().toISOString());
+  }
+  
   res.status(500).json({
-    error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    error: 'Internal server error',
+    ...(process.env.NODE_ENV === 'development' && { message: err.message })
   });
 });
 
@@ -139,19 +213,15 @@ app.use('*', (req, res) => {
 server.listen(PORT, async () => {
   console.log(`SimpleDesk server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
-  console.log(`Stripe Secret Key loaded: ${!!process.env.STRIPE_SECRET_KEY}`);
-console.log('🚀 ALL ENVIRONMENT VARIABLES:');
-console.log('Keys available:', Object.keys(process.env).filter(key => key.includes('STRIPE') || key.includes('DATABASE')).sort());
-console.log('Raw env check:', {
-  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? 'EXISTS' : 'MISSING',
-  DATABASE_URL: process.env.DATABASE_URL ? 'EXISTS' : 'MISSING',
-  NODE_ENV: process.env.NODE_ENV
-});
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Stripe Secret Key loaded: ${!!process.env.STRIPE_SECRET_KEY}`);
+    console.log('🔗 Health check: http://localhost:' + PORT + '/api/health');
+    console.log('🤖 AI Test: http://localhost:3000/ai-test');
+  }
   
   // Initialize database tables
   await initializeDatabase();
   
   console.log('🎉 SimpleDesk backend server is ready and running!');
-  console.log('🔗 Health check: http://localhost:' + PORT + '/api/health');
-  console.log('🤖 AI Test: http://localhost:3000/ai-test');
 });

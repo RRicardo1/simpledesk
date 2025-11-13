@@ -9,15 +9,8 @@ import TicketList from './pages/TicketList';
 import TicketDetail from './pages/TicketDetail';
 import NewTicket from './pages/NewTicket';
 import UserManagement from './pages/UserManagement';
-import KnowledgeBase from './pages/KnowledgeBase';
 import KnowledgeBaseSimple from './pages/KnowledgeBaseSimple';
-import Chat from './pages/Chat';
-import ChatTest from './pages/ChatTest';
-import ChatBasic from './pages/ChatBasic';
-import ChatUltimate from './pages/ChatUltimate';
 import ChatWithLayout from './pages/ChatWithLayout';
-import DebugLogger from './pages/DebugLogger';
-import IsolatedTest from './pages/IsolatedTest';
 import AiTest from './pages/AiTest';
 import Settings from './pages/Settings';
 import Billing from './pages/Billing';
@@ -28,7 +21,6 @@ import About from './pages/About';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import SetupDemo from './pages/SetupDemo';
-import SetupDemoSimple from './pages/SetupDemoSimple';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -225,10 +217,6 @@ function AppRoutes() {
       <Route 
         path="/chat-layout" 
         element={<ChatWithLayout />}
-      />
-      <Route 
-        path="/debug" 
-        element={<DebugLogger />}
       />
       <Route 
         path="/ai-test" 

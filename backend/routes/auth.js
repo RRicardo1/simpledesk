@@ -22,8 +22,12 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    // Strong password validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({ 
+        error: 'Password must be at least 12 characters with uppercase, lowercase, number, and special character (@$!%*?&)' 
+      });
     }
 
     // Check if email already exists
@@ -55,11 +59,11 @@ router.post('/register', async (req, res) => {
       [userId, organizationId, email, passwordHash, firstName, lastName, 'admin', 'active']
     );
 
-    // Generate JWT token
+    // Generate JWT token with shorter expiration for better security
     const token = jwt.sign(
-      { userId, organizationId, role: 'admin' },
+      { userId, organizationId, role: 'admin', jti: uuidv4() },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE || '7d' }
+      { expiresIn: process.env.JWT_EXPIRE || '1h' } // Reduced from 7d to 1h
     );
 
     res.status(201).json({
@@ -118,11 +122,11 @@ router.post('/login', async (req, res) => {
       [user.id]
     );
 
-    // Generate JWT token
+    // Generate JWT token with shorter expiration for better security
     const token = jwt.sign(
-      { userId: user.id, organizationId: user.organization_id, role: user.role },
+      { userId: user.id, organizationId: user.organization_id, role: user.role, jti: uuidv4() },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE || '7d' }
+      { expiresIn: process.env.JWT_EXPIRE || '1h' } // Reduced from 7d to 1h
     );
 
     res.json({
@@ -206,8 +210,12 @@ router.post('/change-password', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Current and new passwords are required' });
     }
 
-    if (newPassword.length < 8) {
-      return res.status(400).json({ error: 'New password must be at least 8 characters' });
+    // Strong password validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({ 
+        error: 'New password must be at least 12 characters with uppercase, lowercase, number, and special character (@$!%*?&)' 
+      });
     }
 
     // Verify current password
