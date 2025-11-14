@@ -4,8 +4,7 @@ const express = require('express');
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
 if (!stripeSecretKey) {
-  console.error('❌ STRIPE_SECRET_KEY environment variable is required');
-  process.exit(1);
+  console.warn('⚠️ STRIPE_SECRET_KEY not configured - billing features disabled');
 }
 
 console.log('=== STRIPE CONFIGURATION DEBUG ===');
