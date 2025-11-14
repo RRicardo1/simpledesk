@@ -11,7 +11,7 @@ const mockDB = {
 
 // Try to connect to database, fall back to mock if not available
 let dbConfig;
-if (process.env.DATABASE_URL) {
+if (process.env.DATABASE_URL && process.env.USE_MOCK_DB !== 'true') {
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
@@ -33,7 +33,11 @@ if (process.env.DATABASE_URL) {
     pool
   };
 } else {
-  console.log('🔧 Using mock database for local testing (no DATABASE_URL found)');
+  if (process.env.USE_MOCK_DB === 'true') {
+    console.log('🔧 Using mock database (USE_MOCK_DB=true)');
+  } else {
+    console.log('🔧 Using mock database for local testing (no DATABASE_URL found)');
+  }
   dbConfig = mockDB;
 }
 

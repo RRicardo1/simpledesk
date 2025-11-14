@@ -5,8 +5,8 @@ async function initializeDatabase() {
     console.log('🗄️ Initializing database tables...');
     
     // Skip database initialization if using mock database
-    if (!process.env.DATABASE_URL) {
-      console.log('🔧 Skipping database initialization (no DATABASE_URL - using mock DB)');
+    if (!process.env.DATABASE_URL || process.env.USE_MOCK_DB === 'true') {
+      console.log('🔧 Skipping database initialization (using mock DB)');
       return true;
     }
 
